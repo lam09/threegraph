@@ -1,7 +1,7 @@
 MyWindow =  function(){
-    var scene,
-	camera, fieldOfView, aspectRatio, nearPlane, farPlane, HEIGHT, WIDTH,
-    renderer, container;
+    var 
+	 fieldOfView, aspectRatio, nearPlane, farPlane, 
+     container;
     this.createScene=function createScene() {
         // Lấy ra width và height của màn hình,
         // dùng để cài đặt tỉ lệ khung hình (aspect ratio) cho camera
@@ -56,7 +56,7 @@ MyWindow =  function(){
         this.container = document.getElementById('world');
         this.container.appendChild(this.renderer.domElement);
     
-        renderer=this.renderer;
+        
         // Nếu người dùng resize trình duyệt
         // cần cập nhật lại camera và size của renderer
         //window.addEventListener('resize', handleWindowResize, false);
@@ -65,16 +65,16 @@ MyWindow =  function(){
     this.handleWindowResize=function () {
         // cập nhật lại kích thước của renderer và camera
         //console.log("handleWindowResize event");
-        HEIGHT = window.innerHeight;
-        WIDTH = window.innerWidth;
-        console.log("handleWindowResize event "+HEIGHT + " '" + WIDTH);
+        this.HEIGHT = window.innerHeight;
+        this.WIDTH = window.innerWidth;
+        console.log("handleWindowResize event "+this.HEIGHT + " '" + this.WIDTH);
 
        /* this.renderer.setSize(this.WIDTH, this.HEIGHT);
         this.camera.aspect = this.WIDTH / this.HEIGHT;
         this.camera.updateProjectionMatrix();*/
-        updateRenderer();
+        //updateRenderer();
     }
-    function updateRenderer(){
+    this.update= function update(){
         this.renderer.setSize(WIDTH, HEIGHT);
         this.camera.aspect = WIDTH / HEIGHT;
         this.camera.updateProjectionMatrix();
