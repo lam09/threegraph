@@ -7,24 +7,27 @@ var Colors = {
 	blue:0x68c3c0,
 	};
 window.addEventListener('load', init, false);
-var dataObject,nodes=[],links=[];
+var dataObject;//,nodes=[],links=[];
 var balls=[],lines=[],
 	sea,sky,airplane;
 var myWindow;
 var graph;
 
 function loadData(){
-	dataObject = JSON.parse("data/miserables.json");
+/*	dataObject = JSON.parse('data/miserables.json');
 	for(i=0;i<dataObject.nodes.length;i++)
-		nodes.push(dataObject.nodes[i]);
-	for(i=0;i<dataObject.links;i++)
-		links.push(dataObject.links[i]);
+		{
+			console.log(dataObject.nodes[i].id.value);
+//			nodes.push(dataObject.nodes[i]);
+		}
+//	for(i=0;i<dataObject.links;i++)
+//		links.push(dataObject.links[i]);*/
 }
 
 function createGraph(){
 	graph = new THREE.Object3D();
 
-	for(i=0;i<nodes.length;i++)
+/*	for(i=0;i<nodes.length;i++)
 	{
 		var x = Math.random() * (380 - 100) + 1  //Math.random() * (max - min) + min
 		var y = Math.random() * (380 - 100) + 1
@@ -36,9 +39,7 @@ function createGraph(){
 		ball.sphere.position=new THREE.Vector3(x, y, z);
 		graph.add(ball.sphere);
 	}
-
-
-
+*/
 	for(i=0;i<100;i++)
 	{
 		var x = Math.random() * (380 - 100) + 1  //Math.random() * (max - min) + min
@@ -107,6 +108,7 @@ function createPlane(){
 
 function init(event){
 	console.log("init event");
+	loadData();
 	myWindow=new MyWindow();
 	myWindow.createScene();
 	myWindow.createLights();
@@ -117,9 +119,58 @@ function init(event){
 	//createLines();
 	//thêm listener
 	window.addEventListener('resize', handleWindowResize, false);
-	document.addEventListener('mousemove', airplane.handleMouseMove, false);
+	document.addEventListener('mousemove', handleMouseMove, false);
 
+	document.addEventListener( 'mousedown', mouseDown, false );
+	document.addEventListener( 'mousedown', mouseUp, false );
+
+	document.addEventListener( 'mousewheel', onDocumentMouseWheel, false );
 	loop();
+}
+	var mousePos={x:0, y:0};
+	var isMouseDown=false;
+    function handleMouseMove(event){
+        console.log("handleMouseMove event");
+	var tx = -1 + (event.clientX / myWindow.WIDTH)*2;
+	var ty = 1 - (event.clientY / myWindow.HEIGHT)*2;
+	//move graph 
+	if(isMouseDown){
+		graph.position.x += (tx-mousePos.x);
+		graph.position.y += (ty-mousePos.y);
+	}
+	mousePos = {x:tx, y:ty};
+	}
+	
+function mouseDown(){
+	isMouseDown=true;
+	console.log("mouse down action")
+
+	//get mouse position
+	var tx = -1 + (event.clientX / myWindow.WIDTH)*2;
+
+	// với trục dọc, chúng ta cần phải đảo ngược công thức
+	// vì trục tung 2D đi theo hướng ngược lại trục tung 3D
+
+	var ty = 1 - (event.clientY / myWindow.HEIGHT)*2;
+	mousePos = {x:tx, y:ty};
+
+}
+function mouseUp(){
+//	isMouseDown=false;
+	console.log("mouse Up action")
+	myWindow.camera.position.x--;
+}
+function onDocumentMouseWheel(event){
+	//myWindow.camera.position.z+=10;
+	console.log("mouse wheel action");
+	var fovMAX = 600;
+    var fovMIN = 1;
+
+    myWindow.camera.fov -= event.wheelDeltaY * 0.05;
+    myWindow.camera.fov = Math.max( Math.min( myWindow.camera.fov, fovMAX ), fovMIN );
+   // myWindow.camera.projectionMatrix = new THREE.Matrix4().makePerspective(myWindow.camera.fov, window.innerWidth / window.innerHeight, myWindow.camera.near, myWindow.camera.far);
+	myWindow.camera.updateProjectionMatrix();
+
 }
 
 function handleWindowResize() {

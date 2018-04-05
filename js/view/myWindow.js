@@ -30,8 +30,8 @@ MyWindow =  function(){
     
         // Đặt vị trí cho camera
         this.camera.position.x = 0;
-        this.camera.position.z = 200;
-        this.camera.position.y = 100;
+        this.camera.position.z = 450;
+        this.camera.position.y = 250;
     
         // Tạo renderer
         this.renderer = new THREE.WebGLRenderer({
