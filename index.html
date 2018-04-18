@@ -7,6 +7,20 @@
     <link rel="stylesheet" type="text/css" href="css/three.css">
    </head>
    <body>
-    <div id="world"></div>
+       <div id="config">
+                <select id="graph_type" onchange="rerender()">
+                        <option value="sphere">sphere</option>
+                        <option value="cube">cube</option>
+                </select>
+                <select id="graph_color"  onchange="rerender()">
+                    <option value="red">red</option>
+                    <option value="white">white</option>
+                    <option value="brow">brow</option>
+                    <option value="pink">pink</option>
+                    <option value="brownDark">brownDark</option>
+                    <option value="blue">blue</option>
+                </select>
+       </div>
+        <div id="world"></div>
    </body>
 </html>

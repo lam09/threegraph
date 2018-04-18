@@ -7,27 +7,61 @@ var Colors = {
 	blue:0x68c3c0,
 	};
 window.addEventListener('load', init, false);
-var dataObject;//,nodes=[],links=[];
+//window.addEventListener('rerender', rerender, false);
+
+
+var dataObject;//,
+
 var balls=[],lines=[],
 	sea,sky,airplane;
 var myWindow;
 var graph;
-
+var config={
+	type:"cube",
+	color:"red"
+};
 function loadData(){
-/*	dataObject = JSON.parse('data/miserables.json');
-	for(i=0;i<dataObject.nodes.length;i++)
-		{
-			console.log(dataObject.nodes[i].id.value);
-//			nodes.push(dataObject.nodes[i]);
-		}
-//	for(i=0;i<dataObject.links;i++)
-//		links.push(dataObject.links[i]);*/
+	var loader = new THREE.FileLoader();
+
+//load a text file and output the result to the console
+loader.load(
+	// resource URL
+	'data/miserables.json',
+
+	// onLoad callback
+	function ( data ) {
+		// output the text to the console
+	//	console.log( data )
+		dataObject=JSON.parse(data);
+		createGraph(dataObject,config);
+		/*nodes = dataObject.nodes;
+		links = dataObject.links;
+		console.log(nodes[1].id);*/
+		//console.log(links);
+	},
+
+	// onProgress callback
+	function ( xhr ) {
+		console.log( (xhr.loaded / xhr.total * 100) + '% loaded' );
+	},
+
+	// onError callback
+	function ( err ) {
+		console.error( 'An error happened' );
+	}
+);
+
+
+
 }
 
-function createGraph(){
+function createGraph(data,config){
 	graph = new THREE.Object3D();
 
-/*	for(i=0;i<nodes.length;i++)
+	var nodes=data.nodes;
+	var links=data.links;
+	
+	for(i=0;i<nodes.length;i++)
 	{
 		var x = Math.random() * (380 - 100) + 1  //Math.random() * (max - min) + min
 		var y = Math.random() * (380 - 100) + 1
@@ -39,8 +73,8 @@ function createGraph(){
 		ball.sphere.position=new THREE.Vector3(x, y, z);
 		graph.add(ball.sphere);
 	}
-*/
-	for(i=0;i<100;i++)
+
+/*	for(i=0;i<100;i++)
 	{
 		var x = Math.random() * (380 - 100) + 1  //Math.random() * (max - min) + min
 		var y = Math.random() * (380 - 100) + 1
@@ -53,7 +87,7 @@ function createGraph(){
 		graph.add(ball.sphere);
 //		myWindow.scene.add(ball.sphere);
 	}
-
+*/
 // creating lines
 	var material = new THREE.LineBasicMaterial({
 		color: 0x0000ff
@@ -115,7 +149,7 @@ function init(event){
 	createPlane();
 	createSea();
 	createSky();
-	createGraph();
+	//createGraph(dataObject);
 	//createLines();
 	//thêm listener
 	window.addEventListener('resize', handleWindowResize, false);
@@ -195,3 +229,12 @@ function loop(){
 	requestAnimationFrame(loop);
 }
 
+function rerender(){
+	console.log("rerender graph")
+	var type= document.getElementById("graph_type");
+	config['type'] = type.options[type.selectedIndex].value;
+	var color=document.getElementById("graph_color");
+	config['color'] = color.options[color.selectedIndex].value;
+	console.log(config['type'] + " " + config['color'])
+	createGraph(dataObject,config);
+}
