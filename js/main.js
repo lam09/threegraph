@@ -30,9 +30,11 @@ loader.load(
 
 	// onLoad callback
 	function ( data ) {
+		
 		// output the text to the console
 	//	console.log( data )
 		dataObject=JSON.parse(data);
+		
 		createGraph(dataObject,config);
 		/*nodes = dataObject.nodes;
 		links = dataObject.links;
@@ -56,7 +58,10 @@ loader.load(
 }
 
 function createGraph(data,config){
-	graph = new THREE.Object3D();
+
+	graph=new ThreeForceGraph()
+		.graphData(data);
+/*	graph = new THREE.Object3D();
 
 	var nodes=data.nodes;
 	var links=data.links;
@@ -74,20 +79,6 @@ function createGraph(data,config){
 		graph.add(ball.sphere);
 	}
 
-/*	for(i=0;i<100;i++)
-	{
-		var x = Math.random() * (380 - 100) + 1  //Math.random() * (max - min) + min
-		var y = Math.random() * (380 - 100) + 1
-		var z = Math.random() * (310 - 101) + 1
-		var position=new THREE.Vector3(x, y, z);
-		console.log("Generated Position is "+position.x + " "+position.y)
-		var ball= new Ball(position,{color:Colors.red},name);
-		balls.push(ball);
-		ball.sphere.position=new THREE.Vector3(x, y, z);
-		graph.add(ball.sphere);
-//		myWindow.scene.add(ball.sphere);
-	}
-*/
 // creating lines
 	var material = new THREE.LineBasicMaterial({
 		color: 0x0000ff
@@ -108,7 +99,8 @@ function createGraph(data,config){
 			}
 		}
 	}
-
+*/
+	
 	myWindow.scene.add(graph);
 }
 
@@ -142,13 +134,25 @@ function createPlane(){
 
 function init(event){
 	console.log("init event");
-	loadData();
 	myWindow=new MyWindow();
 	myWindow.createScene();
 	myWindow.createLights();
+	loadData();
 	createPlane();
 	createSea();
 	createSky();
+	//myWindow.camera.lookAt(graph.position);
+   // myWindow.camera.position.z = Math.cbrt(N) * 100;
+    // Add camera controls
+    const tbControls = new TrackballControls(myWindow.camera, myWindow.renderer.domElement);
+    // Kick-off renderer
+    (function animate() { // IIFE
+      graph.tickFrame();
+      // Frame cycle
+      tbControls.update();
+      myWindow.renderer.render(myWindow.scene, myWindow.camera);
+      requestAnimationFrame(animate);
+    })();
 	//createGraph(dataObject);
 	//createLines();
 	//thêm listener
@@ -224,7 +228,7 @@ function loop(){
 	for(i=0;i<balls.length;i++){
 		balls[i].update();
 	}
-	graph.rotation.y +=0.01;
+	//graph.rotation.y +=0.01;
 	myWindow.renderer.render(myWindow.scene, myWindow.camera);
 	requestAnimationFrame(loop);
 }
