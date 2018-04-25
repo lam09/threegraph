@@ -4,31 +4,35 @@
     <script type="text/javascript" src="js/three.js"></script>
     <script src="//unpkg.com/three-trackballcontrols-web/dist/three-trackballcontrols.min.js"></script>
     <script type="text/javascript" src="//unpkg.com/three-forcegraph"></script>
+    <script src="//unpkg.com/3d-force-graph"></script>
+    <script src="//unpkg.com/three-spritetext"></script>
     <!--script type="text/javascript" src="js/loader.js"></script>
     <script type="text/javascript" src="js/main.js"></script -->
     <link rel="stylesheet" type="text/css" href="css/three.css">
    </head>
    <body>
        <div id="config">
+                <div>URL: <input type="text" id="url">  <button onclick="reload()">reload</button><br></div>
                 <select id="graph_type" onchange="rerender()">
                         <option value="sphere">sphere</option>
                         <option value="cube">cube</option>
+                        <option value="text">text</option>
                 </select>
                 <select id="graph_node_color"  onchange="rerender()">
-                    <option value="red">red</option>
-                    <option value="white">white</option>
-                    <option value="brow">brow</option>
-                    <option value="pink">pink</option>
-                    <option value="brownDark">brownDark</option>
-                    <option value="blue">blue</option>
+                        <option type="number" value="0xf25346">red</option>
+                        <option  type="number" value="0xd8d0d1">white</option>
+                        <option type="number"  value="0x59332e">brow</option>
+                        <option type="number"  value="0xF5986E">pink</option>
+                        <option type="number"  value=0x23190f>brownDark</option>
+                        <option  type="number" value=0x68c3c0>blue</option>
                 </select>
                 <select id="graph_line_color"  onchange="rerender()">
-                        <option value="red">red</option>
-                        <option value="white">white</option>
-                        <option value="brow">brow</option>
-                        <option value="pink">pink</option>
-                        <option value="brownDark">brownDark</option>
-                        <option value="blue">blue</option>
+                        <option value="0xf25346">red</option>
+                        <option value="0xd8d0d1">white</option>
+                        <option value="0x59332e">brow</option>
+                        <option value="0xF5986E">pink</option>
+                        <option value="0x23190f">brownDark</option>
+                        <option value="0x68c3c0">blue</option>
                     </select>
        </div>
        
@@ -45,6 +49,7 @@
 	            blue:0x68c3c0,
 	        };
             // Gen random data
+            var URL='data/miserables.json'
             var loader = new THREE.FileLoader();
             var dataObject;
             var geometry = new THREE.SphereGeometry( 5, 64, 64 );
@@ -56,18 +61,145 @@
             
             //var 
             var graph_config={
-                'color':0xd8d0d1,
-                'type':cube
+                'color':Colors.red,
+                'type':'sphere'
             };
+            var gData,Graph,renderer,scene,camera,tbControls;
             //load a text file and output the result to the console
+            loadData();           
+
+            function createGraph(data,config){
+                var N = 300;
+        
+            
+             gData=data;
+             Graph = new ThreeForceGraph()
+              .graphData(gData)
+              .nodeAutoColorBy('group')
+              .nodeThreeObject(node => {
+                    var material =  new THREE.MeshPhongMaterial({color:node.color, shading:THREE.FlatShading});
+                    switch(config.type) {
+                        case 'sphere':
+                        //graph_config.type=cube;
+                        var geometry = new THREE.SphereGeometry( 5, 64, 64 );
+                        //var material =  new THREE.MeshPhongMaterial({color:0x00ff00, shading:THREE.FlatShading});
+                        var sphere = new THREE.Mesh( geometry, material );
+                        return sphere;
+                        break;
+                        case 'cube':
+                        var geometry_box = new THREE.BoxGeometry( 10, 10, 10 );
+                        var cube = new THREE.Mesh( geometry_box, material );
+                        return cube;
+                        break;
+                        default:
+                        const sprite = new SpriteText(node.id);
+                        sprite.color = node.color;
+                        sprite.textHeight = 8;
+                        return sprite;
+                    }                    
+                })
+             //   .onNodeHover(node => elem.style.cursor = node ? 'pointer' : null)
+                .onNodeClick(node => {
+                    // Aim at node from outside it
+                    const distance = 40;
+                    const distRatio = 1 + distance/Math.hypot(node.x, node.y, node.z);
+                    Graph.cameraPosition(
+                        { x: node.x * distRatio, y: node.y * distRatio, z: node.z * distRatio }, // new position
+                        node, // lookAt ({ x, y, z })
+                        3000  // ms transition duration
+                        );
+                })
+            //   .linkAutoColorBy(d => gData.nodes[d.source].group);
+            //  .nodeThreeObject(config.type);
+            // Setup renderer
+             renderer = new THREE.WebGLRenderer();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            document.getElementById('3d-graph').appendChild(renderer.domElement);
+            // Setup scene
+             scene = new THREE.Scene();
+            scene.add(Graph);
+            scene.add(new THREE.AmbientLight(0xF5986E));
+            var hemisphereLight = new THREE.HemisphereLight(0xaaaaaa,0x000000, 0.9)
+            // Nguồn sáng có hướng tỏa ra từ 1 vị trí nhất định
+            // Nó giống như mặt trời, nghĩa là các tia được tạo ra song song với nhau.
+            var shadowLight = new THREE.DirectionalLight(0xffffff, .9);
+            scene.add(hemisphereLight);
+            scene.add(shadowLight)
+            // Setup camera
+             camera = new THREE.PerspectiveCamera();
+            camera.aspect = window.innerWidth/window.innerHeight;
+            camera.updateProjectionMatrix();
+            camera.lookAt(Graph.position);
+            camera.position.z = Math.cbrt(N) * 100;
+            // Add camera controls
+             tbControls = new TrackballControls(camera, renderer.domElement);
+            // Kick-off renderer
+            /*    (function animate() { // IIFE
+              Graph.tickFrame();
+              // Frame cycle
+              tbControls.update();
+              renderer.render(scene, camera);
+              requestAnimationFrame(animate);
+            })();*/
+        }
+        function init_graph(data,config)
+        {
+
+            return graph;
+        }
+        function clearBox(elementID)
+            {
+                document.getElementById(elementID).innerHTML = "";
+            }
+
+        function rerender(){
+            console.log("rerender graph")
+	        var type= document.getElementById("graph_type").value;
+	        var color=document.getElementById("graph_node_color").value;	        
+            console.log(graph_config.type + " " + graph_config.color)
+            graph_config.type=type;
+            switch(color) {
+                case 'red':
+                graph_config.color=Colors.red;
+                break;
+                case 'white':
+                graph_config.color=Colors.white;
+                break;
+                case 'brown':
+                graph_config.color=Colors.brown;
+                break;
+                case 'pink':
+                graph_config.color=Colors.pink;
+                break;
+                case 'brownDark':
+                graph_config.color=Colors.brownDark;
+                break;
+                case 'blue':
+                graph_config.color=Colors.blue;
+                break;
+                default:
+                graph_config.color=Colors.red;
+            }
+            clearBox('3d-graph');
+            createGraph(dataObject,graph_config);
+        }
+        function loadData(){
             loader.load(
 	        // resource URL
-	        'data/miserables.json',
+	        URL,
 
 	            // onLoad callback
 	        function ( data ) {
                 dataObject=JSON.parse(data);
                 createGraph(dataObject,graph_config);
+                // Kick-off renderer
+            (function animate() { // IIFE
+              Graph.tickFrame();
+              // Frame cycle
+              tbControls.update();
+              renderer.render(scene, camera);
+              requestAnimationFrame(animate);
+            })();
 	            },
 
 	            // onProgress callback
@@ -77,45 +209,17 @@
 
 	            // onError callback
 	        function ( err ) {
+                document.getElementById('3d-graph').appendChild("Cannot load data " + err);
 		        console.error( 'An error happened' );
 	            }
             );
-
-            function createGraph(data,config){
-            const N = 300;
-            
-            const gData=data;
-            const Graph = new ThreeForceGraph()
-              .graphData(gData)
-              .nodeColor(config.color)
-              .nodeThreeObject(config.type);
-            // Setup renderer
-            const renderer = new THREE.WebGLRenderer();
-            renderer.setSize(window.innerWidth, window.innerHeight);
-            document.getElementById('3d-graph').appendChild(renderer.domElement);
-            // Setup scene
-            const scene = new THREE.Scene();
-            scene.add(Graph);
-            scene.add(new THREE.AmbientLight(0xbbbbbb));
-            // Setup camera
-            const camera = new THREE.PerspectiveCamera();
-            camera.aspect = window.innerWidth/window.innerHeight;
-            camera.updateProjectionMatrix();
-            camera.lookAt(Graph.position);
-            camera.position.z = Math.cbrt(N) * 100;
-            // Add camera controls
-            const tbControls = new TrackballControls(camera, renderer.domElement);
-            // Kick-off renderer
-            (function animate() { // IIFE
-              Graph.tickFrame();
-              // Frame cycle
-              tbControls.update();
-              renderer.render(scene, camera);
-              requestAnimationFrame(animate);
-            })();
         }
-
-
+        function reload(){
+            URL = document.getElementById("url").value;
+            clearBox('3d-graph');
+            console.log(URL)
+            loadData();
+        }
 
           </script>
 
