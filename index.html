@@ -70,11 +70,13 @@
 
             function createGraph(data,config){
                 var N = 300;
-        
+             const elem =    document.getElementById('3d-graph');
             
              gData=data;
              Graph = new ThreeForceGraph()
+           
               .graphData(gData)
+            // .nodeLabel('id')
               .nodeAutoColorBy('group')
               .nodeThreeObject(node => {
                     var material =  new THREE.MeshPhongMaterial({color:node.color, shading:THREE.FlatShading});
@@ -98,6 +100,7 @@
                         return sprite;
                     }                    
                 })
+            //    .nodeLabel('id')
              //   .onNodeHover(node => elem.style.cursor = node ? 'pointer' : null)
                 .onNodeClick(node => {
                     // Aim at node from outside it
