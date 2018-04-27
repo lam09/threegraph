@@ -3,6 +3,7 @@
    <head>
 
         <script>
+            var token="EAAc1e6Hpv34BAJRaNbbMwFNIg5WKCW40zCIv8OTE9GWi2RahXtMuMN8XWoPlj0ZCMZAoZBs2JquehHrLvAJTwEzYfZBQe0mNIN022nZAQGzQ5ZBFoiu48ZAgjQCiC13v0kU9UBamVUaF5ZB7ZB3Xiq26NiHqxUfP0KGwZAkgsvkFeqFAsZCoyBZCuwuzB9MzovfP6EwZD"
             window.fbAsyncInit = function() {
             FB.init({
             appId            : '2029129950674814',
@@ -19,15 +20,36 @@
                 js.src = "https://connect.facebook.net/en_US/sdk.js";
                 fjs.parentNode.insertBefore(js, fjs);
                 }(document, 'script', 'facebook-jssdk'));
+                // Only works after `FB.init` is called
+            function myFacebookLogin() {
+                FB.login(function(){
+                    // Note: The call will only work if you accept the permission request
+                    FB.api('/me/feed', 'post', {message: 'Hello, world!'});
+                    }, {scope: 'publish_actions'});
+            }
+            
+        var friendsList= new Array();
+        function getFbFriends(){         
+            FB.api('/1476601309','GET',{}, function(response) {
+                console.log("sent")
+                console.log(response)
+                // Insert your code here
+                if (response && response.data) {
+                    for (let i = 0; i < response.data.length; i++) {
+                     console.log(response.data[i].id);
+                }
+            }
+            }
+            );            
+        }
+
+
         </script>
-    <link rel="stylesheet" type="text/css" href="css/three.css">
    </head>
    <body>
     <div id="data">Hello getdata is here</div>
 
-<script>
-
-</script>
+            <button onclick="getFbFriends()">getdata</button>
 
    </body>
 </html>

@@ -13,20 +13,20 @@
    <body>
        <div id="config">
                 <div>URL: <input type="text" id="url">  <button onclick="reload()">reload</button><br></div>
-                <select id="graph_type" onchange="rerender()">
+                <select id="graph_type" onchange="changeTypeOfObject()">
                         <option value="sphere">sphere</option>
                         <option value="cube">cube</option>
                         <option value="text">text</option>
                 </select>
-                <select id="graph_node_color"  onchange="rerender()">
-                        <option type="number" value="0xf25346">red</option>
-                        <option  type="number" value="0xd8d0d1">white</option>
-                        <option type="number"  value="0x59332e">brow</option>
-                        <option type="number"  value="0xF5986E">pink</option>
-                        <option type="number"  value=0x23190f>brownDark</option>
-                        <option  type="number" value=0x68c3c0>blue</option>
+                <select id="graph_link_color"  onchange="changeTypeOfLink()">
+                        <option type="number" value='red'>red</option>
+                        <option  type="number" value='white'>white</option>
+                        <option type="number"  value='brow'>brow</option>
+                        <option type="number"  value='pink'>pink</option>
+                        <option type="number"  value='brownDark'>brownDark</option>
+                        <option  type="number" value='blue'>blue</option>
                 </select>
-                <select id="graph_line_color"  onchange="rerender()">
+                <select id="graph_line_color"  onchange="changeTypeOfLink()">
                         <option value="0xf25346">red</option>
                         <option value="0xd8d0d1">white</option>
                         <option value="0x59332e">brow</option>
@@ -69,18 +69,113 @@
             loadData();           
 
             function createGraph(data,config){
-                var N = 300;
-             const elem =    document.getElementById('3d-graph');
+            var N = 300;
+            gData=data;
+            const elem = document.getElementById("3d-graph");
+            Graph = ForceGraph3D()
+                (elem)
+                .graphData(gData)
+                .nodeLabel('id')
+                .nodeAutoColorBy('group')
+                .onNodeHover(node => elem.style.cursor = node ? 'pointer' : null)
+                .onNodeClick(node => {
+                // Aim at node from outside it
+                    removeNode(node);
+                    const distance = 40;
+                    const distRatio = 1 + distance/Math.hypot(node.x, node.y, node.z);
+                    Graph.cameraPosition(
+                        { x: node.x * distRatio, y: node.y * distRatio, z: node.z * distRatio }, // new position
+                        node, // lookAt ({ x, y, z })
+                        3000  // ms transition duration
+                        );
+                })
+                .nodeThreeObject(node => {
+                    var material =  new THREE.MeshPhongMaterial({color:node.color, shading:THREE.FlatShading});                   
+                        var geometry = new THREE.SphereGeometry( 5, 64, 64 );
+                        var sphere = new THREE.Mesh( geometry, material );
+                        return sphere;                      
+                })
+                .linkColor(config.color)
+                .linkMaterial(material)
+                .linkWidth(1)
+                ;
+
+
             
-             gData=data;
-             Graph = new ThreeForceGraph()
-           
-              .graphData(gData)
-            // .nodeLabel('id')
-              .nodeAutoColorBy('group')
-              .nodeThreeObject(node => {
+            renderer = new THREE.WebGLRenderer();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            document.getElementById('3d-graph').appendChild(renderer.domElement);
+            // Setup scene
+             scene = new THREE.Scene();
+            scene.add(Graph);
+            scene.add(new THREE.AmbientLight(0xF5986E));
+            var hemisphereLight = new THREE.HemisphereLight(0xaaaaaa,0x000000, 0.9)
+            // Nguồn sáng có hướng tỏa ra từ 1 vị trí nhất định
+            // Nó giống như mặt trời, nghĩa là các tia được tạo ra song song với nhau.
+            var shadowLight = new THREE.DirectionalLight(0xffffff, .9);
+            scene.add(hemisphereLight);
+            scene.add(shadowLight)
+            // Setup camera
+             camera = new THREE.PerspectiveCamera();
+            camera.aspect = window.innerWidth/window.innerHeight;
+            camera.updateProjectionMatrix();
+            //camera.lookAt(Graph.position);
+            camera.position.z = Math.cbrt(N) * 100;
+            // Add camera controls
+             tbControls = new TrackballControls(camera, renderer.domElement);
+            // Kick-off renderer
+            /*    (function animate() { // IIFE
+              Graph.tickFrame();
+              // Frame cycle
+              tbControls.update();
+              renderer.render(scene, camera);
+              requestAnimationFrame(animate);
+            })();*/
+        }
+        function openMenu(node)
+        {
+
+        }
+
+        function processingData(){
+            var nodes=dataObject.nodes;
+            var links=dataObject.links;
+            for(i=0;i<nodes.length;i++)
+            {
+               nodes[i].neightbors= new Array();
+            } 
+            for(i=0;i<links.length;i++)
+            {
+                var link=links[i];
+                var nodeA=nodes.find(x=>x.id==link.source);
+                var nodeB=nodes.find(y=>y.id==link.target);
+              //  console.log("node: " + i+" " +nodeA.id)
+               // console.log("node: "+i+" " +nodeB.id)
+                nodeA.neightbors.push(nodeB.id);
+                nodeB.neightbors.push(nodeA.id);
+            }
+            console.log(dataObject);
+        }
+        function filterByNode(node) {
+            let { nodes, links } = Graph.graphData();
+            links = links.filter(l => l.source == node || l.target == node); // Remove links attached to node
+            nodes = getFriends(node,data);
+            Graph.graphData({ nodes, links });
+        }
+        function init_graph(data,config)
+        {
+
+            return graph;
+        }
+        function clearBox(elementID)
+            {
+                document.getElementById(elementID).innerHTML = "";
+            }
+        function changeTypeOfObject(){
+            var type= document.getElementById("graph_type").value;
+            Graph.nodeThreeObject(node => {
                     var material =  new THREE.MeshPhongMaterial({color:node.color, shading:THREE.FlatShading});
-                    switch(config.type) {
+                    switch(type) {
                         case 'sphere':
                         //graph_config.type=cube;
                         var geometry = new THREE.SphereGeometry( 5, 64, 64 );
@@ -100,91 +195,37 @@
                         return sprite;
                     }                    
                 })
-            //    .nodeLabel('id')
-             //   .onNodeHover(node => elem.style.cursor = node ? 'pointer' : null)
-                .onNodeClick(node => {
-                    // Aim at node from outside it
-                    const distance = 40;
-                    const distRatio = 1 + distance/Math.hypot(node.x, node.y, node.z);
-                    Graph.cameraPosition(
-                        { x: node.x * distRatio, y: node.y * distRatio, z: node.z * distRatio }, // new position
-                        node, // lookAt ({ x, y, z })
-                        3000  // ms transition duration
-                        );
-                })
-            //   .linkAutoColorBy(d => gData.nodes[d.source].group);
-            //  .nodeThreeObject(config.type);
-            // Setup renderer
-             renderer = new THREE.WebGLRenderer();
-            renderer.setSize(window.innerWidth, window.innerHeight);
-            document.getElementById('3d-graph').appendChild(renderer.domElement);
-            // Setup scene
-             scene = new THREE.Scene();
-            scene.add(Graph);
-            scene.add(new THREE.AmbientLight(0xF5986E));
-            var hemisphereLight = new THREE.HemisphereLight(0xaaaaaa,0x000000, 0.9)
-            // Nguồn sáng có hướng tỏa ra từ 1 vị trí nhất định
-            // Nó giống như mặt trời, nghĩa là các tia được tạo ra song song với nhau.
-            var shadowLight = new THREE.DirectionalLight(0xffffff, .9);
-            scene.add(hemisphereLight);
-            scene.add(shadowLight)
-            // Setup camera
-             camera = new THREE.PerspectiveCamera();
-            camera.aspect = window.innerWidth/window.innerHeight;
-            camera.updateProjectionMatrix();
-            camera.lookAt(Graph.position);
-            camera.position.z = Math.cbrt(N) * 100;
-            // Add camera controls
-             tbControls = new TrackballControls(camera, renderer.domElement);
-            // Kick-off renderer
-            /*    (function animate() { // IIFE
-              Graph.tickFrame();
-              // Frame cycle
-              tbControls.update();
-              renderer.render(scene, camera);
-              requestAnimationFrame(animate);
-            })();*/
         }
-        function init_graph(data,config)
-        {
 
-            return graph;
-        }
-        function clearBox(elementID)
-            {
-                document.getElementById(elementID).innerHTML = "";
-            }
-
-        function rerender(){
-            console.log("rerender graph")
-	        var type= document.getElementById("graph_type").value;
-	        var color=document.getElementById("graph_node_color").value;	        
-            console.log(graph_config.type + " " + graph_config.color)
-            graph_config.type=type;
-            switch(color) {
+        function changeTypeOfLink(){
+            
+	        var choosencolor=document.getElementById("graph_link_color").value;	        
+            var color;
+            switch(choosencolor) {
                 case 'red':
-                graph_config.color=Colors.red;
+                color=Colors.red;
                 break;
                 case 'white':
-                graph_config.color=Colors.white;
+                color=Colors.white;
                 break;
                 case 'brown':
-                graph_config.color=Colors.brown;
+                color=Colors.brown;
                 break;
                 case 'pink':
-                graph_config.color=Colors.pink;
+                color=Colors.pink;
                 break;
                 case 'brownDark':
-                graph_config.color=Colors.brownDark;
+                color=Colors.brownDark;
                 break;
                 case 'blue':
-                graph_config.color=Colors.blue;
+                color=Colors.blue;
                 break;
                 default:
-                graph_config.color=Colors.red;
+                color=Colors.red;
             }
-            clearBox('3d-graph');
-            createGraph(dataObject,graph_config);
+            var material =  new THREE.MeshPhongMaterial({color:color, shading:THREE.FlatShading});
+            Graph.linkMaterial(material)
+
         }
         function loadData(){
             loader.load(
@@ -194,10 +235,11 @@
 	            // onLoad callback
 	        function ( data ) {
                 dataObject=JSON.parse(data);
+                processingData(dataObject);
                 createGraph(dataObject,graph_config);
                 // Kick-off renderer
             (function animate() { // IIFE
-              Graph.tickFrame();
+            //  Graph.tickFrame();
               // Frame cycle
               tbControls.update();
               renderer.render(scene, camera);
