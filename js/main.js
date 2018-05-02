@@ -146,10 +146,11 @@ function init(event){
     // Add camera controls
     const tbControls = new TrackballControls(myWindow.camera, myWindow.renderer.domElement);
     // Kick-off renderer
-    (function animate() { // IIFE
-      graph.tickFrame();
+    (
+		function animate() { // IIFE
+      	graph.tickFrame();
       // Frame cycle
-      tbControls.update();
+      	tbControls.update();
       myWindow.renderer.render(myWindow.scene, myWindow.camera);
       requestAnimationFrame(animate);
     })();

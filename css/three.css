@@ -5,3 +5,8 @@
 	overflow: hidden;
 	background: linear-gradient(#e4e0ba, #f7d9aa);
 }
+.col-sm-4 { 
+	background-color: red;
+	margin-top: 10%;
+	margin-bottom: 10%;
+}
