@@ -101,7 +101,7 @@
                 .onNodeClick(node => {
                 // Aim at node from outside it
                    // openMenu(node);
-                   console.log("on node click")
+                   console.log("on node click " + node.id)
                    document.getElementById("selectedNodeName").innerHTML="Name: "+node.id;
                     var friends="Friends: ";
                     for(i=0;i<node.neightbors.length;i++) friends+=", " +node.neightbors[i]
@@ -217,6 +217,9 @@
             for(i=0;i<nodes.length;i++)
             {
                nodes[i].neightbors= new Array();
+               nodes[i].parent="no parent";
+               nodes[i].visited=0;
+               nodes[i].pred="none"
             } 
             for(i=0;i<links.length;i++)
             {
@@ -228,7 +231,7 @@
                 nodeA.neightbors.push(nodeB.id);
                 nodeB.neightbors.push(nodeA.id);
             }
-            console.log(dataObject);
+           // console.log(dataObject);
         }
         function filterByNode(node) {
             let { nodes, links } = Graph.graphData();
@@ -318,7 +321,10 @@
 	            // onLoad callback
 	        function ( data ) {
                 dataObject=JSON.parse(data);
+                console.log(dataObject);
                 processingData(dataObject);
+
+                console.log(dataObject)
                 createGraph(dataObject,graph_config);
                 // Kick-off renderer
             (function animate() { // IIFE
@@ -340,7 +346,7 @@
                 document.getElementById('3d-graph').innerHTML="Cannot load data " + err;
 		        console.error( 'An error happened' );
 	            }
-            );
+            ); 
         }
         function reload(){
             URL = document.getElementById("url").value;
@@ -350,49 +356,75 @@
         }
 
         function shortestPath(graph, source, target) {
+            console.log("source node: " +source.id)
+            var result = Array();
+            result.push(source);
             if (source.id == target.id) {   // Delete these four lines if
-            print(source.id);          // you want to look for a cycle
-            return;                 // when the source is equal to
-            }                         // the target.
-         /*   var dist=[graph.nodes.length];
-            var prev=[graph.nodes.length];
-            for(i=0;i<graph.nodes.length;i++){
-                dist[i]=100000;
-                prev[]
-            }*/
-            var queue = [ source ],
-            visited = { source: true },
-            predecessor = {},
-            tail = 0;
-            while (tail < queue.length) {
-                var u = queue[tail++];  // Pop a vertex off the queue.
-               // var u= graph.nodes.find(x=>x.id==u.source);
-                var neighbors = u.neightbors;
-                console.log(u);
-                console.log(neighbors);
-                for (var i = 0; i < neighbors.length; ++i) {
-                    var a = neighbors[i];
-                    var v = graph.nodes.find(x=>x.id==a)
-                    if (visited[v]) {
-                    continue;
-                    }
-                visited[v] = true;
-                if (v === target) {   // Check if the path is complete.
-                    var path = [ v ];   // If so, backtrack through the path.
-                    while (u !== source) {
-                    u = predecessor[u];
-                    path.push(u);
-                    }
-                path.reverse();
-                console.log(path.join(' &rarr; '));
-                return;
-                }
-                predecessor[v] = u;
-                queue.push(v);
-                }
-                }
-                console.log('there is no path from ' + source + ' to ' + target);
+            return result;                 // when the source is equal to
+            }                         // the target.       
+            var nodes=dataObject.nodes;
+            //init pred, length
+            for(var i=0;i<nodes.length;i++)
+            {
+                nodes[i].pred="none";
+                nodes[i].visited=0;
+                nodes[i].trackLength=10000;
+                nodes[i].parent="none";
             }
+            source.parent="root";
+            source.pred=source.id;
+            source.visited=1;
+            source.trackLength=0;
+            //looping
+            var checkedNode=0;
+            var currentNode=source;
+            
+            while(checkedNode<nodes.length){
+                checkedNode++;
+                
+                currentNode.visited=1;
+                //update track length for neighbors
+                console.log("current node is "+currentNode.id)
+                for(var i=0;i<currentNode.neightbors.length;i++){
+                    console.log("neighbor "+currentNode.neightbors[i])
+                    var neighborNode = dataObject.nodes.find(x=>x.id==currentNode.neightbors[i]);
+                    if(neighborNode.visited==1)continue;
+                    neighborNode.parent=currentNode.id;
+                    if(currentNode.trackLength + 1 < neighborNode.trackLength)
+                    {
+                        neighborNode.trackLength=currentNode.trackLength+1;
+                        currentNode.pred=neighborNode.id;
+                    }
+                }
+                //get none visitted neighbor
+                var found=false;
+                while(!found){
+              //      console.log("find in node " + currentNode.id)
+                for(var j=0;j<currentNode.neightbors.length;j++){
+                    var neighborNodeX = dataObject.nodes.find(y=>y.id==currentNode.neightbors[j]);
+                    if(neighborNodeX.visited==0){
+                        currentNode=neighborNodeX;
+                        found=true;
+                        break;
+                    }
+                }
+                if(currentNode.parent=="root")break;
+                //go back
+                if(!found){
+               //     console.log("not found "+currentNode.id)
+                    currentNode=dataObject.nodes.find(z=>z.id==currentNode.parent)
+                }
+            }
+            console.log("visitted " + checkedNode);
+            
+            }
+            // print way
+            var x=des_node;
+            while(x.id!=source){
+                console.log(x.id);
+                x=dataObject.nodes.find(k=>k.id==x.pred);
+            }
+        } 
 
           </script>
 
