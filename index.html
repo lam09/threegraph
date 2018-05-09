@@ -268,6 +268,7 @@
             };
             newData.nodes=new Array();
             newData.links=new Array();
+            newData.nodes.push(last_selected_node);
             for(var i=0;i<last_selected_node.neightbors.length;i++)
             {
                 var node=dataObject.nodes.find(x=>x.id==last_selected_node.neightbors[i]);
@@ -280,9 +281,9 @@
 
                 if(link!=null)newData.links.push(link);
                 if(link2!=null)newData.links.push(link2);
-
             }
-            Graph.data(newData);
+            console.log(newData);
+            Graph.graphData(newData);
         }
 
         function clearBox(elementID)
