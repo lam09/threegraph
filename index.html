@@ -41,17 +41,25 @@
                 <br>
        </div>
      
-       <div id="select" class="row">
-            <div class="col-sm-4" style="background-color:gold;margin: 25px;background-size: 300px 100px;"> 
+       <div id="select" class="row" style="background-color:white;">
+            <div class="col-sm-4" style="background-color:gold;margin: 25px;background-size: 300px 100px;">                 
                 <p id="source">Source user: click user to choose</p>
                 <p id="destination">Destination user: click user to choose</p>
                 <input type="button" value="Get way" onclick="getWay()">
             </div>
+            <div class="col-sm-4" style="background-color:blue;margin: 25px;background-size: 300px 100px;">                        
+                        <p>User detail</p>
+                        <p id="selectedNodeName">click on node to show detail</p>
+                        <input type="button" value="get friends" onclick="getFriends()">
+
+                    </div>
             <div class="col-sm-4" style="background-color:red;margin: 25px;background-size: 300px 100px;">
-                    <p>User detail</p>
-                    <p id="selectedNodeName">click on node to show detail</p>
-                    <p id="selectedNodeFriends"></p>
-                    <p id="selectedNodeGroup"></p>
+                <input id="checkBox" type="checkbox"> MultiSelect</input>  
+                <div id="userdetail" class="row"> 
+                    aaaaaa
+                </div>    
+                   
+                    
                 </div>
         </div>
        
@@ -101,12 +109,13 @@
                 .onNodeClick(node => {
                 // Aim at node from outside it
                    // openMenu(node);
-                   console.log("on node click " + node.id)
-                   document.getElementById("selectedNodeName").innerHTML="Name: "+node.id;
+                   console.log("on node click " + node.id);
+                   selectUser(node);
+                 /*  document.getElementById("selectedNodeName").innerHTML="Name: "+node.id;
                     var friends="Friends: ";
-                    for(i=0;i<node.neightbors.length;i++) friends+=", " +node.neightbors[i]
+                   for(i=0;i<node.neightbors.length;i++) friends+=", " +node.neightbors[i]
                    document.getElementById("selectedNodeFriends").innerHTML=friends;
-                   document.getElementById("selectedNodeGroup").innerHTML="Group: " +node.group;
+                   document.getElementById("selectedNodeGroup").innerHTML="Group: " +node.group;*/
                    selectedNode++;
                    if(selectedNode==1) {
                        document.getElementById("source").innerHTML="Source user selected: " +node.id;
@@ -174,48 +183,13 @@
               requestAnimationFrame(animate);
             })();*/
         }
-        // Define your menu
-        var menu = [
-            {
-                title: 'Item #1',
-                action: function(d, i) {
-                console.log('Item #1 clicked!');
-                console.log('The data for this circle is: ' + d);
-            },
-            disabled: false // optional, defaults to false
-            },
-            {
-                title: 'Item #2',
-                action: function(d, i) {
-                console.log('You have clicked the second item!');
-                console.log('The data for this circle is: ' + d);
-            }
-        }
-        ]
-        var contextDiv;
-        function openMenu(node)
-        {
-            contextDiv = document.select("body").append("div")
-                .style("position", "absolute")
-                .style("top", event.pageY + 1 + "px")
-                .style("left", event.pageX + 1 + "px");
-            var contextTable = contextDiv.append("table")
-                .style("border", "solid 1px");
-
-                contextTable.append("tr")
-                .append("td").text("Expand All").attr("id", "citem1");
-                contextTable.append("tr")
-                .append("td").text("Item2").attr("id", "citem2");
-                contextTable.append("tr")
-        .append("td").text("Item3").attr("id", "citem3");
-    contextTable.on("click", tableClick);
-        }
 
         function processingData(){
             var nodes=dataObject.nodes;
             var links=dataObject.links;
             for(i=0;i<nodes.length;i++)
             {
+               nodes[i].trackLength=10000;
                nodes[i].neightbors= new Array();
                nodes[i].parent="no parent";
                nodes[i].visited=0;
@@ -253,6 +227,64 @@
                 shortestPath(dataObject,source_node,des_node);
             }
         }
+
+        var users=new Array();
+        function selectUser(node)
+        {
+            last_selected_node=node;
+            var multiselect = document.getElementById("checkBox").checked;
+            var element=document.getElementById("userdetail");
+           // console.log(multiselect);
+            if(multiselect){
+              //  console.log("multiselect")
+                users.push(node);
+            }
+            else{
+                users=[];
+                users.push(node);
+                element.innerHTML = "";
+                }
+            //render user detail
+            
+
+      // document.getElementsByTagName('body')[0].appendChild(div);
+            for(var i=0;i<users.length;i++)
+            {
+                console.log("name " + users[i].id);
+                var div = document.createElement('div');
+                    div.style.backgroundColor = "red";
+                    var node = document.createElement("p");
+                    var textnode = document.createTextNode("Name: " +users[i].id);
+                    div.appendChild(textnode);
+                element.appendChild(div);
+            }
+        }
+        var last_selected_node;
+        function getFriends(){
+            if(last_selected_node==null) return;
+            var newData={
+                nodes:Array(),
+                links:Array()
+            };
+            newData.nodes=new Array();
+            newData.links=new Array();
+            for(var i=0;i<last_selected_node.neightbors.length;i++)
+            {
+                var node=dataObject.nodes.find(x=>x.id==last_selected_node.neightbors[i]);
+                newData.nodes.push(node);
+            }
+            for(var i=0;i<dataObject.links.length;i++)
+            {
+                var link=dataObject.links.find(x=>x.source==last_selected_node.id);
+                var link2=dataObject.links.find(x=>x.target==last_selected_node.id);
+
+                if(link!=null)newData.links.push(link);
+                if(link2!=null)newData.links.push(link2);
+
+            }
+            Graph.data(newData);
+        }
+
         function clearBox(elementID)
             {
                 document.getElementById(elementID).innerHTML = "";
@@ -386,8 +418,9 @@
                 //update track length for neighbors
                 console.log("current node is "+currentNode.id)
                 for(var i=0;i<currentNode.neightbors.length;i++){
-                    console.log("neighbor "+currentNode.neightbors[i])
+                    console.log("neighbor a "+currentNode.neightbors[i])
                     var neighborNode = dataObject.nodes.find(x=>x.id==currentNode.neightbors[i]);
+                    console.log("neighbor aa "+neighborNode.id);
                     if(neighborNode.visited==1)continue;
                     neighborNode.parent=currentNode.id;
                     if(currentNode.trackLength + 1 < neighborNode.trackLength)
@@ -419,9 +452,10 @@
             
             }
             // print way
+            console.log("source node " + source.id + " Des node "+ target.id);
             var x=des_node;
-            while(x.id!=source){
-                console.log(x.id);
+            while(x.id!=source.id){
+                console.log(x.id +" berfore is " + x.pred);
                 x=dataObject.nodes.find(k=>k.id==x.pred);
             }
         } 
