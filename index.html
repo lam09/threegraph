@@ -13,16 +13,16 @@
     <link rel="stylesheet" type="text/css" href="css/three.css">
    </head>
    <body style="background-color:black;">
-       <div id="config" style="background-color:blue;background-size: 300px 100px, cover;">
-                <div>URL: <input type="text" id="url">  <button onclick="reload()">reload</button><br></div>
+       <div id="config" style="background-color:red;background-size: 300px 100px, cover;">
+                <div>URL: <input class="form-control" type="text" id="url">  <button class="btn btn-default" onclick="reload()">reload</button><br></div>
                 <br>
-                <select id="graph_type" onchange="changeTypeOfObject()">
+                <select class="btn btn-primary dropdown-toggle" id="graph_type" onchange="changeTypeOfObject()">
                         <option value="sphere">sphere</option>
                         <option value="cube">cube</option>
                         <option value="text">text</option>
                 </select>
                 
-                <select id="graph_link_color"  onchange="changeTypeOfLink()">
+                <select class="btn btn-primary dropdown-toggle" id="graph_link_color"  onchange="changeTypeOfLink()">
                         <option type="number" value='red'>red</option>
                         <option  type="number" value='white'>white</option>
                         <option type="number"  value='brow'>brow</option>
@@ -30,33 +30,26 @@
                         <option type="number"  value='brownDark'>brownDark</option>
                         <option  type="number" value='blue'>blue</option>
                 </select>
-                <select id="graph_line_color"  onchange="changeTypeOfLink()">
-                        <option value="0xf25346">red</option>
-                        <option value="0xd8d0d1">white</option>
-                        <option value="0x59332e">brow</option>
-                        <option value="0xF5986E">pink</option>
-                        <option value="0x23190f">brownDark</option>
-                        <option value="0x68c3c0">blue</option>
-                    </select>
+                
                 <br>
        </div>
      
        <div id="select" class="row" style="background-color:white;">
-            <div class="col-sm-4" style="background-color:gold;margin: 25px;background-size: 300px 100px;">                 
+            <div class="col-sm-4" style="background-color:red;margin: 25px;background-size: 300px 100px;">                 
                 <p id="source">Source user: click user to choose</p>
                 <p id="destination">Destination user: click user to choose</p>
-                <input type="button" value="Get way" onclick="getWay()">
+                <input class="btn btn-default" type="button" value="Get way" onclick="getWay()">
             </div>
-            <div class="col-sm-4" style="background-color:blue;margin: 25px;background-size: 300px 100px;">                        
+            <div class="col-sm-4" style="background-color:red;margin: 25px;background-size: 300px 100px;">                        
                         <p>User detail</p>
                         <p id="selectedNodeName">click on node to show detail</p>
-                        <input type="button" value="get friends" onclick="getFriends()">
+                        <input class="btn btn-default" type="button" value="Filter By User" onclick="getFriends()">
 
                     </div>
             <div class="col-sm-4" style="background-color:red;margin: 25px;background-size: 300px 100px;">
                 <input id="checkBox" type="checkbox"> MultiSelect</input>  
                 <div id="userdetail" class="row"> 
-                    aaaaaa
+                    show user detail
                 </div>    
                    
                     
@@ -242,23 +235,23 @@
             else{
                 users=[];
                 users.push(node);
-                element.innerHTML = "";
                 }
+                element.innerHTML = "";
             //render user detail
-            
-
-      // document.getElementsByTagName('body')[0].appendChild(div);
             for(var i=0;i<users.length;i++)
             {
-                console.log("name " + users[i].id);
+                console.log("name safsd " + users[i].id);
                 var div = document.createElement('div');
                     div.style.backgroundColor = "red";
-                    var node = document.createElement("p");
-                    var textnode = document.createTextNode("Name: " +users[i].id);
+                    var p_elemet = document.createElement("p");
+                    var friends="";
+                   for(j=0;j<users[i].neightbors.length;j++) friends+=", " +users[i].neightbors[j];
+                    var textnode = document.createTextNode(i + ", Name: " +users[i].id + " Friends: "+ friends);
                     div.appendChild(textnode);
                 element.appendChild(div);
             }
         }
+
         var last_selected_node;
         function getFriends(){
             if(last_selected_node==null) return;
@@ -273,16 +266,14 @@
             {
                 var node=dataObject.nodes.find(x=>x.id==last_selected_node.neightbors[i]);
                 newData.nodes.push(node);
+                newData.links.push(
+                {
+                    "source":last_selected_node.id,
+                    "target":node.id
+                }
+                ); 
             }
-            for(var i=0;i<dataObject.links.length;i++)
-            {
-                var link=dataObject.links.find(x=>x.source==last_selected_node.id);
-                var link2=dataObject.links.find(x=>x.target==last_selected_node.id);
-
-                if(link!=null)newData.links.push(link);
-                if(link2!=null)newData.links.push(link2);
-            }
-            console.log(newData);
+           
             Graph.graphData(newData);
         }
 
@@ -419,15 +410,16 @@
                 //update track length for neighbors
                 console.log("current node is "+currentNode.id)
                 for(var i=0;i<currentNode.neightbors.length;i++){
-                    console.log("neighbor a "+currentNode.neightbors[i])
+                 //   console.log("neighbor a "+currentNode.neightbors[i])
                     var neighborNode = dataObject.nodes.find(x=>x.id==currentNode.neightbors[i]);
-                    console.log("neighbor aa "+neighborNode.id);
+                 //   console.log("neighbor aa "+neighborNode.id);
                     if(neighborNode.visited==1)continue;
                     neighborNode.parent=currentNode.id;
                     if(currentNode.trackLength + 1 < neighborNode.trackLength)
                     {
                         neighborNode.trackLength=currentNode.trackLength+1;
-                        currentNode.pred=neighborNode.id;
+                        neighborNode.pred=currentNode.id;
+                        console.log("pred of "+currentNode.id + " is " + currentNode.pred );
                     }
                 }
                 //get none visitted neighbor
@@ -455,10 +447,25 @@
             // print way
             console.log("source node " + source.id + " Des node "+ target.id);
             var x=des_node;
+            var newData={
+                nodes:Array(),
+                links:Array()
+            };
+            newData.nodes=new Array();
+            newData.links=new Array();
+            newData.nodes.push(x);
             while(x.id!=source.id){
+                newData.links.push(
+                {
+                    "source":x.pred,
+                    "target":x.id
+                }
+                );                
                 console.log(x.id +" berfore is " + x.pred);
                 x=dataObject.nodes.find(k=>k.id==x.pred);
+                newData.nodes.push(x);
             }
+            Graph.graphData(newData);
         } 
 
           </script>
