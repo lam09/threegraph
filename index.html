@@ -16,13 +16,13 @@
        <div id="config" style="background-color:red;background-size: 300px 100px, cover;">
                 <div>URL: <input class="form-control" type="text" id="url">  <button class="btn btn-default" onclick="reload()">reload</button><br></div>
                 <br>
-                <select class="btn btn-primary dropdown-toggle" id="graph_type" onchange="changeTypeOfObject()">
+                <select class="btn btn-primary dropdown-toggle" id="graph_type" data-toggle="dropdown" onchange="changeTypeOfObject()">
                         <option value="sphere">sphere</option>
                         <option value="cube">cube</option>
                         <option value="text">text</option>
                 </select>
                 
-                <select class="btn btn-primary dropdown-toggle" id="graph_link_color"  onchange="changeTypeOfLink()">
+                <select class="btn btn-primary dropdown-toggle" id="graph_link_color" data-toggle="dropdown" onchange="changeTypeOfLink()">
                         <option type="number" value='red'>red</option>
                         <option  type="number" value='white'>white</option>
                         <option type="number"  value='brow'>brow</option>
@@ -41,8 +41,8 @@
                 <input class="btn btn-default" type="button" value="Get way" onclick="getWay()">
             </div>
             <div class="col-sm-4" style="background-color:red;margin: 25px;background-size: 300px 100px;">                        
-                        <p>User detail</p>
-                        <p id="selectedNodeName">click on node to show detail</p>
+                        <p>Selected User Name</p>
+                        <p id="selectedNodeName">click on node</p>
                         <input class="btn btn-default" type="button" value="Filter By User" onclick="getFriends()">
 
                     </div>
@@ -69,7 +69,7 @@
 	            blue:0x68c3c0,
 	        };
             // Gen random data
-            var URL='data/miserables.json'
+            var URL='data/miserables2.json'
             var loader = new THREE.FileLoader();
             var dataObject;
             var geometry = new THREE.SphereGeometry( 5, 64, 64 );
@@ -104,11 +104,7 @@
                    // openMenu(node);
                    console.log("on node click " + node.id);
                    selectUser(node);
-                 /*  document.getElementById("selectedNodeName").innerHTML="Name: "+node.id;
-                    var friends="Friends: ";
-                   for(i=0;i<node.neightbors.length;i++) friends+=", " +node.neightbors[i]
-                   document.getElementById("selectedNodeFriends").innerHTML=friends;
-                   document.getElementById("selectedNodeGroup").innerHTML="Group: " +node.group;*/
+                 
                    selectedNode++;
                    if(selectedNode==1) {
                        document.getElementById("source").innerHTML="Source user selected: " +node.id;
@@ -225,12 +221,13 @@
         function selectUser(node)
         {
             last_selected_node=node;
+            document.getElementById("selectedNodeName").innerText=last_selected_node.id;
             var multiselect = document.getElementById("checkBox").checked;
             var element=document.getElementById("userdetail");
            // console.log(multiselect);
             if(multiselect){
               //  console.log("multiselect")
-                users.push(node);
+               if(!users.includes(node)) users.push(node);
             }
             else{
                 users=[];
@@ -240,7 +237,6 @@
             //render user detail
             for(var i=0;i<users.length;i++)
             {
-                console.log("name safsd " + users[i].id);
                 var div = document.createElement('div');
                     div.style.backgroundColor = "red";
                     var p_elemet = document.createElement("p");
@@ -392,7 +388,7 @@
             {
                 nodes[i].pred="none";
                 nodes[i].visited=0;
-                nodes[i].trackLength=10000;
+                nodes[i].trackLength=100000;
                 nodes[i].parent="none";
             }
             source.parent="root";
@@ -447,6 +443,9 @@
             // print way
             console.log("source node " + source.id + " Des node "+ target.id);
             var x=des_node;
+            if(x.trackLength==100000){
+                alert("There is no way between two nodes!!");
+            }
             var newData={
                 nodes:Array(),
                 links:Array()
