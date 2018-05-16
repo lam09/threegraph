@@ -96,7 +96,7 @@
             Graph = ForceGraph3D()
                 (elem)
                 .graphData(gData)
-                .nodeLabel('id')
+                .nodeLabel('friendCount')
                 .nodeAutoColorBy('group')
                 .onNodeHover(node => elem.style.cursor = node ? 'pointer' : null)
                 .onNodeClick(node => {
@@ -194,6 +194,11 @@
                 nodeA.neightbors.push(nodeB.id);
                 nodeB.neightbors.push(nodeA.id);
             }
+
+             for(i=0;i<nodes.length;i++)
+            {
+               nodes[i].friendCount=nodes[i].neightbors.length;
+            } 
            // console.log(dataObject);
         }
         function filterByNode(node) {
